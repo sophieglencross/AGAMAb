@@ -159,7 +159,7 @@ class DFIntegrandNdim: public math::IFunctionNdim {
 
 			    try{
 	    // 2. determine the actions
-				    actions::Actions act = model.actFinder.actions(posvel);
+					actions::Actions act = model.actFinder.actions(posvel);
 
 	    // 3. compute the value of distribution function times the jacobian
 	    // FIXME: in some cases the Fudge action finder may fail and produce

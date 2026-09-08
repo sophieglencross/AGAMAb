@@ -21,13 +21,10 @@ public:
     virtual double getJzcrit(const double Jf) const{
 	    return 0;
     }
-private:
-    const double mass;         ///< total mass  (M)
-    const double scaleRadius;  ///< scale radius of the Plummer model  (b)
-
     /** Evaluate potential and up to two its derivatives by spherical radius. */
     virtual void evalDeriv(double r,
-        double* potential, double* deriv, double* deriv2) const;
+			   double* potential, double* deriv, double* deriv2) const;
+    double density(double r) const;
     double Phi(double r) const;
     double dPhidr(double r) const;
     double Vc2(double r) const{
@@ -36,6 +33,10 @@ private:
     /** explicitly define the density function, instead of relying on the potential derivatives
         (they suffer from cancellation errors already at r>1e5) */
     virtual double densitySph(const coord::PosSph &pos) const;
+private:
+    const double mass;         ///< total mass  (M)
+    const double scaleRadius;  ///< scale radius of the Plummer model  (b)
+
 };
 
 /** Spherical Isochrone potential:

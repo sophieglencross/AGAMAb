@@ -15,6 +15,10 @@ void Plummer::evalDeriv(double r,
     if(deriv2)
         *deriv2 = pot * (2 * pow_2(r * invrsq) - pow_2(scaleRadius * invrsq));
 }
+double Plummer::density(double r) const{
+	double b2 = pow_2(scaleRadius), x2 = b2 + pow_2(r);
+	return 3/(4*M_PI)*mass*b2/(x2*x2*sqrt(x2));
+}
 double Plummer::Phi(double r) const{
 	double invrsq = mass?  1. / (pow_2(r) + pow_2(scaleRadius)) : 0;  // if mass=0, output 0
 	return -mass * sqrt(invrsq);

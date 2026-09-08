@@ -164,6 +164,10 @@ public:
 	    printf("Error getJzcrit(E,invPhi0) not overloaded\n");
 	    return 0;
     }
+    virtual double getzcrit(const double, const double) const {
+        printf("Error getzcrit(E,invPhi0) not overloaded\n");
+        return 0;
+    }
     virtual void getFDI3critUmin(const double, const double,
 				double&, double&, double&) const{
 	    printf("Error getFDI3crit(E,invPhi0) not overloaded\n");

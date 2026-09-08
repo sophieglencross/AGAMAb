@@ -4,6 +4,7 @@
 #include "math_core.h"
 #include <stdexcept>
 #include <cmath>
+#include <iostream>
 
 namespace orbit{
 
@@ -148,7 +149,8 @@ static const double ACCURACY_INTEGR = 1e-8;
 
 static const double ACCURACY_Zcoord = 1e-5;
 /// upper limit on the number of timesteps in ODE solver
-static const unsigned int MAX_NUM_STEPS_ODE = 20000;
+//static const unsigned int MAX_NUM_STEPS_ODE = 20000;
+static const unsigned int MAX_NUM_STEPS_ODE = 1000000; // Significant increase. To ensure run time isn't too long, number of consequents must be reasonable
 
 template<typename CoordT>
 StepResult RuntimeTrajectory<CoordT>::processTimestep(
@@ -357,7 +359,8 @@ EXP coord::PosVelCyl makeSoS(const coord::PosVelCyl& Rz, const potential::BasePo
 	Rs.clear(); pRs.clear();
 	while(!finished) {
 		if(solver.doStep() <= 0 || numStepsODE >= MAX_NUM_STEPS_ODE) { // signal of error
-			return Rz;
+            return Rz;
+
 		} else {
 			numStepsODE++;
 			double timePrev = timeCurr;

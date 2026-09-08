@@ -117,6 +117,7 @@ EXP double estimateFocalDistanceShellOrbit(
 					   const potential::BasePotential& poten, double E, double Jphi, 
 					   double* R=0, double* Jz=NULL, std::vector<coord::PosVelCyl>* shell=NULL);
 
+
 /* To construct a ShellInterpolator we integrate shell orbits on grid
  * in E, Xi = Jphi/Jc(E) (energy and inclination)
  * For each of D,Rsh we produce 2 types of LinearInterpolator2d:
@@ -192,7 +193,7 @@ class EXP ShellInterpolator{
 */
 class EXP  PolarInterpolator{
 	private:
-		math::LinearInterpolator interpI3, interpFD, interpUmin, interpJzcrit;
+		math::LinearInterpolator interpI3, interpFD, interpUmin, interpJzcrit,  interpzcrit;//,interpJzcritJf;
 		std::vector<double> coeffsJz;
 		math::ScalingSemiInf Sc;
 	public:
@@ -229,8 +230,25 @@ class EXP  PolarInterpolator{
 			return interpJzcrit.value(scaledE);
 		}			
 		double getJz(const double Jf) const{
-			return math::evalPoly(coeffsJz, scale(Sc,Jf));
+			double Jz = math::evalPoly(coeffsJz, scale(Sc, Jf));
+			if (Jz > Jf) return Jf; // Would lead to a negative Jr
+			else return Jz;
+
+			//const double scaledJf = math::clip(scale(Sc, Jf),
+			//	interpJzcritJf.xmin(), interpJzcritJf.xmax());
+			//double Jz= interpJzcritJf.value(scaledJf);
+			if (Jz > Jf) return Jf; // Would lead to a negative Jr
+			else return Jz;
 		}
+
+		// zcrit is most likely not useful beyond testing the interpolator, but it is helpful to know how well the linear interpolation holds.
+		double getzcrit(const double E, const double invPhi0)const {
+			const double scaledE = math::clip(scaleE(E, invPhi0),
+				interpzcrit.xmin(), interpzcrit.xmax());
+			return interpzcrit.value(scaledE);
+		}
+
+
 };
 
 }//namespace

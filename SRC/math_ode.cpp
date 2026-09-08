@@ -10,7 +10,6 @@ inline double pow_2(double x)  { return x*x; }
 
 /* ----------------- ODE integrators ------------- */
 
-
 EXP double initTimeStep(const IOdeSystem& odeSystem, double time, const double x[], double accAbs, double accRel)
 {
     const int NDIM = odeSystem.size();

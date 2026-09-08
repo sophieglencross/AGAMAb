@@ -123,43 +123,89 @@ public:
     The descendant classes implement the specific way of constructing a DF and compute its value
     as a function of E,L,Lz.
 */
-class EXP QuasiSpherical: public BaseDistributionFunction {
+class EXP QuasiSpherical : public BaseDistributionFunction {
 public:
     const actions::ActionFinderSpherical af;  ///< correspondence between (Jr,L) and E
-    QuasiSpherical(const math::IFunction& potential) :
-        af(potential::FunctionToPotentialWrapper(potential)) {}
+    double epsilonJ;
+    QuasiSpherical(const math::IFunction& potential, double _epsilonJ) :
+        af(potential::FunctionToPotentialWrapper(potential)), epsilonJ(_epsilonJ) {
+    }
     virtual ~QuasiSpherical() {}
 
+
+
+
     /** convert actions to E,L,Lz and compute the DF */
-    virtual double value(const actions::Actions &J, const double Jrcrit) const
+    virtual double value(const actions::Actions& J, const double Jzcrit) const
     {
-        return value(af.E(J), /*L*/ J.Jz + (J.Jphi>=0 ? J.Jphi : -J.Jphi), /*Lz*/ J.Jphi);
+        double eps = .2 * epsilonJ;
+        actions::Actions J1;
+        double w = wt(J);
+        if (J.Jz < Jzcrit) {
+            J1 = actions::Actions(std::max(J.Jr + .5 * (fabs(J.Jphi) - eps), 0.0), J.Jz, eps);
+        }
+        else {
+            J1 = actions::Actions(J.Jr, std::max(J.Jz + (fabs(J.Jphi) - eps), 0.0), eps);
+        }
+        double F0 = value(af.E(J), /*L*/ J.Jz + (J.Jphi >= 0 ? J.Jphi : -J.Jphi), /*Lz*/ J.Jphi), F1 = value(af.E(J1), /*L*/ J1.Jz + (J1.Jphi >= 0 ? J1.Jphi : -J1.Jphi), /*Lz*/ J1.Jphi);
+        return w * F1 + (1 - w) * F0;
+    }
+
+    virtual double wt(const actions::Actions& J) const {
+        if (epsilonJ == INFINITY) return 0; // EpsilonJ =inf taken as no weighting. 
+        else  return 1 / (1 + pow_2(J.Jphi) / (epsilonJ * (epsilonJ + J.Jr + J.Jz)));
     }
 
     /** value of distribution function for the given E, L, Lz - implemented in derived classes */
-    virtual double value(double E, double L, double Lz) const=0;
+    virtual double value(double E, double L, double Lz) const = 0;
 };
 
 
 /** Spherical isotropic (Eddington) or anisotropic (Cuddeford-Osipkov-Merritt) distribution function
     constructed for a given combination of potential and density.
 */
-class EXP QuasiSphericalCOM: public QuasiSpherical {
+class EXP QuasiSphericalCOM : public QuasiSpherical {
     const double invPhi0, beta0, r_a;
     const math::LogLogSpline df;
 public:
     /** construct the DF for the provided density/potential pair and anisotropy parameters:
         \param[in]  density    is the spherically-symmetric density profile specified by a
-        function of one variable; one may use potential::DensityWrapper(density) to express 
+        function of one variable; one may use potential::DensityWrapper(density) to express
         an instance of BaseDensity-derived class as a function of one variable for this routine;
         \param[in]  potential  is the total spherical potential specified by a 1d function
         (doesn't need to be related to density via the Poisson equation); again, one may use
         potential::PotentialWrapper(pot) to express a BasePotential-derived class as a 1d function;
         \param[in]  beta0      is the value of anisotropy coefficient at r-->0, should be -1/2<=beta0<=1
         \param[in]  r_a        is the Osipkov-Merritt anisotropy radius (may be infinite).
+        \param[in]  epsilonJ   controls anisotropy near the core. INFINITY corresponds to no correction
     */
     QuasiSphericalCOM(const math::IFunction& density, const math::IFunction& potential,
-        double beta0=0, double r_a=INFINITY);
+        double beta0 = 0, double r_a = INFINITY, double epsilonJ = INFINITY);
+
+    using QuasiSpherical::value;  // bring both overloaded functions into scope
+
+    virtual double value(double E, double L, double Lz) const;
+};
+
+class EXP Cudd : public QuasiSpherical {
+    const double invPhi0, alpha, r_a;
+    const int n;
+    const math::LogLogSpline df;
+public:
+    /** construct the DF for the provided density/potential pair and anisotropy parameters:
+        \param[in]  density    is the spherically-symmetric density profile specified by a
+        function of one variable; one may use potential::DensityWrapper(density) to express
+        an instance of BaseDensity-derived class as a function of one variable for this routine;
+        \param[in]  potential  is the total spherical potential specified by a 1d function
+        (doesn't need to be related to density via the Poisson equation); again, one may use
+        potential::PotentialWrapper(pot) to express a BasePotential-derived class as a 1d function;
+        \param[in]  alpha      is the value of anisotropy coefficient at r-->inf,
+        \param[in]  r_a        is the anisotropy radius
+        \param[in]  n          at large r, the density must go as rho ~ r^-n
+        \param[in]  epsilonJ   controls anisotropy near the core. INFINITY corresponds to no correction
+    */
+    Cudd(const math::IFunction& density, const math::IFunction& potential,
+        double alpha = 0, double r_a = INFINITY, int n = 5, double epsilonJ = INFINITY);
 
     using QuasiSpherical::value;  // bring both overloaded functions into scope
 

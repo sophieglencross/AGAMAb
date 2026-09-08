@@ -181,7 +181,8 @@ EXP DoublePowerLaw::DoublePowerLaw(const DoublePowerLawParam &inparams) :
 
 EXP double DoublePowerLaw::value(const actions::Actions &J, const double Jzc) const
 {
-	double L=J.Jz+fabs(J.Jphi);
+	double L = J.Jz + fabs(J.Jphi);
+	
     // linear combination of actions in the inner part of the model (for J<J0)
 	double hJ  = fmax(0, par.coefJrIn * J.Jr +par.coefJzIn * J.Jz +
 			  (3 - par.coefJrIn - par.coefJzIn) * fabs(J.Jphi));
@@ -219,7 +220,21 @@ double NewDoublePowerLaw::value(const actions::Actions& J, const double Jzc) con
 		J1=actions::Actions(J.Jr, J.Jz+(fabs(J.Jphi)-eps), coefJzIn*eps);
 	}
 	double F0=DF0.value(J, Jzc), F1=DF0.value(J1, Jzc);
-	return w*F1 + (1-w)*F0;
+	double value = w * F1 + (1 - w) * F0;
+	// Make sure this is less than the "cheat" value
+	double cheatval = DF0.par.norm / pow_3(2 * M_PI * DF0.par.J0) *
+		math::pow(1 + math::pow(DF0.par.J0 / eps, DF0.par.steepness), DF0.par.slopeIn / DF0.par.steepness) *
+		math::pow(1 + math::pow(eps / DF0.par.J0, DF0.par.steepness), -DF0.par.slopeOut / DF0.par.steepness);
+	// Keep the exponential part so that does decrease with increasing J
+	cheatval *= exp(-math::pow(sqrt(pow_2(J.Jr) + pow_2(J.Jphi) + pow_2(J.Jz)) / DF0.par.Jcutoff, DF0.par.cutoffStrength));
+
+
+	if (isFinite(value) && value<cheatval) { 
+		return value;
+	}
+	else {
+		return cheatval;
+	}
 }
 
 DwarfSpheroid::DwarfSpheroid(const DwarfSpheroidParam& _par): par(_par){}

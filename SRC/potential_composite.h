@@ -152,6 +152,15 @@ class EXP CompositeCyl: public BasePotentialCyl{
 		}
 
 
+		virtual double getzcrit(const double E, const double invPhi0) const {
+			if (PtrPolarI)
+				return PtrPolarI->getzcrit(E, invPhi0);
+			else {
+				printf("Error PtrPolarI is NULL\n");
+				return 0;
+			}
+		}
+
 };
 
 }  // namespace potential

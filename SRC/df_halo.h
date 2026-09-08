@@ -90,9 +90,10 @@ struct DwarfSpheroidParam{
     doesn't change the overall normalization (eq.5 in Cole&Binney 2017).
 */
 class EXP DoublePowerLaw: public BaseDistributionFunction{
-	const DoublePowerLawParam par;  ///< parameters of DF
+	
 	const double beta;              ///< auxiliary coefficient for the case of a central core
 	public:
+		const DoublePowerLawParam par;  ///< parameters of DF
     /** Create an instance of double-power-law distribution function with given parameters
         \param[in] params  are the parameters of DF
         \throws std::invalid_argument exception if parameters are nonsense

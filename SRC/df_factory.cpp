@@ -268,8 +268,9 @@ EXP PtrDistributionFunction createDistributionFunction(
             density = potential;
         double beta0 = kvmap.getDoubleAlt("beta", "beta0", 0);
         double r_a   = kvmap.getDoubleAlt("anisotropyRadius", "r_a", INFINITY) * converter.lengthUnit;
+		double epsilonJ = kvmap.getDouble("EpsilonJ", INFINITY);
         return PtrDistributionFunction(new QuasiSphericalCOM(
-            potential::DensityWrapper(*density), potential::PotentialWrapper(*potential), beta0, r_a));
+			potential::DensityWrapper(*density), potential::PotentialWrapper(*potential), beta0, r_a, epsilonJ));
     }
     else  if(utils::stringsEqual(type, "Plummer")) {
 	    checkNonzero(potential, type);
